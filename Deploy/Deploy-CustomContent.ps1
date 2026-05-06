@@ -231,11 +231,11 @@ function Initialize-SmartDeployment {
     }
 
     if (-not $SmartDeployment) {
-        Write-PipelineMessage "Smart deployment disabled â€” all content will be deployed." -Level Info
+        Write-PipelineMessage "Smart deployment disabled — all content will be deployed." -Level Info
         return
     }
 
-    Write-PipelineMessage "Smart deployment enabled â€” detecting changed files..." -Level Section
+    Write-PipelineMessage "Smart deployment enabled — detecting changed files..." -Level Section
 
     # Determine changed files via git diff
     try {
@@ -246,13 +246,13 @@ function Initialize-SmartDeployment {
         $changedFiles = $null
 
         if ($env:BUILD_SOURCEBRANCH -and $env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
-            # PR trigger â€” diff against target branch
+            # PR trigger — diff against target branch
             $targetBranch = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
             git fetch --depth=1 origin $targetBranch 2>$null | Out-Null
             $changedFiles = git diff --name-only "origin/$targetBranch...HEAD" 2>$null
         }
         elseif ($env:BUILD_SOURCEVERSION) {
-            # CI trigger â€” ADO shallow clones with depth=1. Deepen by 1 to get the parent commit.
+            # CI trigger — ADO shallow clones with depth=1. Deepen by 1 to get the parent commit.
             git fetch --deepen=1 2>$null | Out-Null
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>$null
 
@@ -264,7 +264,7 @@ function Initialize-SmartDeployment {
             }
         }
         else {
-            # Local run â€” diff against HEAD~1
+            # Local run — diff against HEAD~1
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>$null
         }
 
@@ -278,11 +278,11 @@ function Initialize-SmartDeployment {
             }
         }
         else {
-            Write-PipelineMessage "  Could not determine changed files â€” deploying all content." -Level Warning
+            Write-PipelineMessage "  Could not determine changed files — deploying all content." -Level Warning
         }
     }
     catch {
-        Write-PipelineMessage "  Git diff failed: $($_.Exception.Message) â€” deploying all content." -Level Warning
+        Write-PipelineMessage "  Git diff failed: $($_.Exception.Message) — deploying all content." -Level Warning
     }
     finally {
         Pop-Location
@@ -338,10 +338,10 @@ function Test-ShouldDeployFile {
         }
 
         if (-not $isChanged) {
-            # Check deployment state â€” retry items that failed previously
+            # Check deployment state — retry items that failed previously
             if (-not (Test-WasDeployedSuccessfully -FilePath $FilePath)) {
-                Write-PipelineMessage "Retrying: $relativePath â€” not previously deployed successfully" -Level Warning
-                return $true  # Not previously deployed successfully â€” retry
+                Write-PipelineMessage "Retrying: $relativePath — not previously deployed successfully" -Level Warning
+                return $true  # Not previously deployed successfully — retry
             }
             return $false
         }
@@ -431,13 +431,13 @@ function Initialize-DeploymentState {
             Write-PipelineMessage "Loaded deployment state: $($script:DeploymentState.deployedItems.Count) previously deployed item(s)." -Level Info
         }
         catch {
-            Write-PipelineMessage "Failed to load deployment state: $($_.Exception.Message) â€” starting fresh." -Level Warning
+            Write-PipelineMessage "Failed to load deployment state: $($_.Exception.Message) — starting fresh." -Level Warning
             $script:DeploymentState = @{ deployedItems = @{} }
         }
     }
     else {
         $script:DeploymentState = @{ deployedItems = @{} }
-        Write-PipelineMessage "No deployment state file found â€” all items will deploy on first run." -Level Info
+        Write-PipelineMessage "No deployment state file found — all items will deploy on first run." -Level Info
     }
 }
 
@@ -771,7 +771,7 @@ function Initialize-DependencyGraph {
     $depsFile = Join-Path $PSScriptRoot "dependencies.json"
 
     if (-not (Test-Path $depsFile)) {
-        Write-PipelineMessage "No dependencies.json found â€” all content will deploy unconditionally." -Level Info
+        Write-PipelineMessage "No dependencies.json found — all content will deploy unconditionally." -Level Info
         return
     }
 
@@ -823,7 +823,7 @@ function Invoke-PreFlightChecks {
             $stateRuleCount = @($script:DeploymentState.deployedItems.Keys | Where-Object { $_ -like 'Content/AnalyticalRules/*' }).Count
 
             if ($stateRuleCount -gt 10 -and $existingRuleCount -eq 0) {
-                Write-PipelineMessage "Deployment state claims $stateRuleCount rules deployed but workspace has 0 â€” state is stale. Resetting." -Level Warning
+                Write-PipelineMessage "Deployment state claims $stateRuleCount rules deployed but workspace has 0 — state is stale. Resetting." -Level Warning
                 $script:DeploymentState = @{ deployedItems = @{} }
             }
         }
@@ -921,7 +921,7 @@ function Test-ContentDependencies {
         [string]$ContentPath
     )
 
-    # No dependency graph loaded â€” deploy everything
+    # No dependency graph loaded — deploy everything
     if ($script:DependencyGraph.Count -eq 0) {
         return @{ Passed = $true; Missing = @() }
     }
@@ -929,7 +929,7 @@ function Test-ContentDependencies {
     # Normalise path to use forward slashes and make relative
     $relativePath = $ContentPath.Replace('\', '/').Replace($BasePath.Replace('\', '/') + '/', '')
 
-    # No entry in dependencies â€” no prerequisites, deploy unconditionally
+    # No entry in dependencies — no prerequisites, deploy unconditionally
     if (-not $script:DependencyGraph.ContainsKey($relativePath)) {
         return @{ Passed = $true; Missing = @() }
     }
@@ -946,7 +946,7 @@ function Test-ContentDependencies {
         }
     }
 
-    # Check watchlist dependencies â€” satisfied by workspace OR internal repo watchlists
+    # Check watchlist dependencies — satisfied by workspace OR internal repo watchlists
     if ($deps.ContainsKey('watchlists')) {
         foreach ($wl in $deps.watchlists) {
             $inWorkspace = $script:WorkspaceWatchlists -contains $wl
@@ -957,7 +957,7 @@ function Test-ContentDependencies {
         }
     }
 
-    # Check function dependencies â€” satisfied by workspace OR internal repo parsers
+    # Check function dependencies — satisfied by workspace OR internal repo parsers
     if ($deps.ContainsKey('functions')) {
         foreach ($fn in $deps.functions) {
             $inWorkspace = $script:WorkspaceFunctions -contains $fn
@@ -987,7 +987,7 @@ function Deploy-CustomParsers {
     Write-PipelineMessage "Deploying KQL parsers/functions..." -Level Section
 
     if (-not (Test-Path $parsersPath)) {
-        Write-PipelineMessage "Parsers folder not found at '$parsersPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "Parsers folder not found at '$parsersPath' — skipping." -Level Warning
         return $counters
     }
 
@@ -999,7 +999,7 @@ function Deploy-CustomParsers {
 
     $yamlFiles = @(Get-ChildItem -Path $parsersPath -Include "*.yaml", "*.yml" -Recurse -File)
     if ($yamlFiles.Count -eq 0) {
-        Write-PipelineMessage "No YAML files found in '$parsersPath' â€” skipping." -Level Info
+        Write-PipelineMessage "No YAML files found in '$parsersPath' — skipping." -Level Info
         return $counters
     }
 
@@ -1008,7 +1008,7 @@ function Deploy-CustomParsers {
 
     foreach ($file in $yamlFiles) {
         if (-not (Test-ShouldDeployFile -FilePath $file.FullName)) {
-            Write-PipelineMessage "Unchanged: $($file.Name) â€” skipping (smart deployment)" -Level Info
+            Write-PipelineMessage "Unchanged: $($file.Name) — skipping (smart deployment)" -Level Info
             $counters.Skipped++
             continue
         }
@@ -1084,7 +1084,7 @@ function Deploy-CustomDetections {
     Write-PipelineMessage "Deploying custom analytics rules..." -Level Section
 
     if (-not (Test-Path $detectionsPath)) {
-        Write-PipelineMessage "AnalyticalRules folder not found at '$detectionsPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "AnalyticalRules folder not found at '$detectionsPath' — skipping." -Level Warning
         return $counters
     }
 
@@ -1097,7 +1097,7 @@ function Deploy-CustomDetections {
 
     $yamlFiles = @(Get-ChildItem -Path $detectionsPath -Include "*.yaml", "*.yml" -Recurse -File)
     if ($yamlFiles.Count -eq 0) {
-        Write-PipelineMessage "No YAML files found in '$detectionsPath' â€” skipping." -Level Info
+        Write-PipelineMessage "No YAML files found in '$detectionsPath' — skipping." -Level Info
         return $counters
     }
 
@@ -1118,7 +1118,7 @@ function Deploy-CustomDetections {
 
     foreach ($file in $yamlFiles) {
         if (-not (Test-ShouldDeployFile -FilePath $file.FullName)) {
-            Write-PipelineMessage "Unchanged: $($file.Name) â€” skipping (smart deployment)" -Level Info
+            Write-PipelineMessage "Unchanged: $($file.Name) — skipping (smart deployment)" -Level Info
             $counters.Skipped++
             continue
         }
@@ -1139,22 +1139,22 @@ function Deploy-CustomDetections {
             $ruleName = $rule['name']
             $ruleKind = $rule['kind']
 
-            # Check dependency graph â€” deploy disabled if prerequisites are not met
+            # Check dependency graph — deploy disabled if prerequisites are not met
             $depCheck = Test-ContentDependencies -ContentPath $file.FullName
             $missingDeps = $false
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Missing dependencies for '$($file.Name)': $($depCheck.Missing -join ', ') â€” deploying as disabled" -Level Warning
+                Write-PipelineMessage "Missing dependencies for '$($file.Name)': $($depCheck.Missing -join ', ') — deploying as disabled" -Level Warning
                 $missingDeps = $true
             }
 
             Write-PipelineMessage "Processing: $ruleName ($ruleKind) [$($file.Name)]" -Level Info
 
-            # Build the API properties â€” force disabled if dependencies are missing
+            # Build the API properties — force disabled if dependencies are missing
             $isCommunityRule = $file.FullName -match '[/\\]Community[/\\]'
             $ruleDescription = if ($rule.ContainsKey('description')) { $rule['description'] } else { "" }
             $ruleEnabled     = if ($isCommunityRule) { $false } elseif ($missingDeps) { $false } elseif ($rule.ContainsKey('enabled')) { [bool]$rule['enabled'] } else { $true }
             if ($isCommunityRule) {
-                Write-PipelineMessage "  Community rule â€” deploying as disabled" -Level Info
+                Write-PipelineMessage "  Community rule — deploying as disabled" -Level Info
             }
 
             $properties = @{
@@ -1192,7 +1192,7 @@ function Deploy-CustomDetections {
                 $properties.triggerOperator = if ($operatorMap.ContainsKey($rawOperator)) { $operatorMap[$rawOperator] } else { $rule['triggerOperator'] }
             }
 
-            # Optional fields â€” support both 'techniques' and 'relevantTechniques' (Azure-Sentinel repo uses the latter)
+            # Optional fields — support both 'techniques' and 'relevantTechniques' (Azure-Sentinel repo uses the latter)
             if ($rule.ContainsKey('tactics')) {
                 $properties.tactics = [array]$rule['tactics']
             }
@@ -1239,7 +1239,7 @@ function Deploy-CustomDetections {
             }
             else {
                 Invoke-SentinelApi -Uri $uri -Method Put -Headers $script:AuthHeader -Body $body | Out-Null
-                $deployMsg = if ($missingDeps) { "Deployed (disabled â€” missing deps): $ruleName" } else { "Deployed: $ruleName" }
+                $deployMsg = if ($missingDeps) { "Deployed (disabled — missing deps): $ruleName" } else { "Deployed: $ruleName" }
                 Write-PipelineMessage $deployMsg -Level Success
                 $counters.Deployed++
                 Set-DeploymentItemState -FilePath $file.FullName -Status "success"
@@ -1250,13 +1250,13 @@ function Deploy-CustomDetections {
             $isKqlError = $errorMsg -match 'FailedToResolveColumn|FailedToResolveScalarExpression|SemanticError|could not be found|Failed to run the analytics rule query'
 
             if ($missingDeps) {
-                Write-PipelineMessage "Cannot deploy '$($file.Name)' even as disabled â€” $errorMsg" -Level Warning
+                Write-PipelineMessage "Cannot deploy '$($file.Name)' even as disabled — $errorMsg" -Level Warning
                 $counters.Skipped++
             }
             elseif ($isKqlError -and $ruleEnabled) {
                 # KQL validation failed (e.g. newly deployed watchlist columns not yet queryable).
                 # Retry with enabled=false so the rule is created and can be enabled later.
-                Write-PipelineMessage "KQL validation error for '$($file.Name)' â€” retrying as disabled..." -Level Warning
+                Write-PipelineMessage "KQL validation error for '$($file.Name)' — retrying as disabled..." -Level Warning
                 try {
                     $properties.enabled = $false
                     $retryBody = @{
@@ -1264,7 +1264,7 @@ function Deploy-CustomDetections {
                         properties = $properties
                     } | ConvertTo-Json -Depth 20
                     Invoke-SentinelApi -Uri $uri -Method Put -Headers $script:AuthHeader -Body $retryBody | Out-Null
-                    Write-PipelineMessage "Deployed (disabled â€” KQL validation): $ruleName" -Level Success
+                    Write-PipelineMessage "Deployed (disabled — KQL validation): $ruleName" -Level Success
                     $counters.Deployed++
                     Set-DeploymentItemState -FilePath $file.FullName -Status "success"
                 }
@@ -1298,13 +1298,13 @@ function Deploy-CustomWatchlists {
     Write-PipelineMessage "Deploying custom watchlists..." -Level Section
 
     if (-not (Test-Path $watchlistsPath)) {
-        Write-PipelineMessage "Watchlists folder not found at '$watchlistsPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "Watchlists folder not found at '$watchlistsPath' — skipping." -Level Warning
         return $counters
     }
 
     $watchlistDirs = @(Get-ChildItem -Path $watchlistsPath -Directory)
     if ($watchlistDirs.Count -eq 0) {
-        Write-PipelineMessage "No watchlist subfolders found â€” skipping." -Level Info
+        Write-PipelineMessage "No watchlist subfolders found — skipping." -Level Info
         return $counters
     }
 
@@ -1316,7 +1316,7 @@ function Deploy-CustomWatchlists {
             $csvPath = Join-Path $dir.FullName "data.csv"
 
             if (-not (Test-ShouldDeployFile -FilePath $metadataPath) -and -not (Test-ShouldDeployFile -FilePath $csvPath)) {
-                Write-PipelineMessage "Unchanged: $($dir.Name) â€” skipping (smart deployment)" -Level Info
+                Write-PipelineMessage "Unchanged: $($dir.Name) — skipping (smart deployment)" -Level Info
                 $counters.Skipped++
                 continue
             }
@@ -1358,7 +1358,7 @@ function Deploy-CustomWatchlists {
             # Check dependency graph
             $depCheck = Test-ContentDependencies -ContentPath $metadataPath
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Skipping '$($dir.Name)': missing dependencies â€” $($depCheck.Missing -join ', ')" -Level Warning
+                Write-PipelineMessage "Skipping '$($dir.Name)': missing dependencies — $($depCheck.Missing -join ', ')" -Level Warning
                 $counters.Skipped++
                 continue
             }
@@ -1419,7 +1419,7 @@ function Deploy-CustomPlaybooks {
     Write-PipelineMessage "Deploying custom playbooks..." -Level Section
 
     if (-not (Test-Path $playbooksPath)) {
-        Write-PipelineMessage "Playbooks folder not found at '$playbooksPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "Playbooks folder not found at '$playbooksPath' — skipping." -Level Warning
         return $counters
     }
 
@@ -1427,7 +1427,7 @@ function Deploy-CustomPlaybooks {
     $templateFiles = @(Get-ChildItem -Path $playbooksPath -Filter "*.json" -Recurse |
         Where-Object { $_.Name -notmatch '\.parameters\.json$' -and $_.Name -ne '.DS_Store' -and $_.Directory.Name -ne 'Template' })
     if ($templateFiles.Count -eq 0) {
-        Write-PipelineMessage "No playbook ARM templates found â€” skipping." -Level Info
+        Write-PipelineMessage "No playbook ARM templates found — skipping." -Level Info
         return $counters
     }
 
@@ -1517,11 +1517,11 @@ function Deploy-CustomPlaybooks {
         }
     }
 
-    # Any modules not in the sorted list have circular dependencies â€” append with warning
+    # Any modules not in the sorted list have circular dependencies — append with warning
     $sortedModuleNames = $moduleOrder | ForEach-Object { "Module-$($_.BaseName)" }
     $unsorted = @($moduleFiles | Where-Object { "Module-$($_.BaseName)" -notin $sortedModuleNames })
     if ($unsorted.Count -gt 0) {
-        Write-PipelineMessage "Warning: Circular dependency detected among $($unsorted.Count) module(s) â€” deploying in file order." -Level Warning
+        Write-PipelineMessage "Warning: Circular dependency detected among $($unsorted.Count) module(s) — deploying in file order." -Level Warning
         foreach ($u in $unsorted) { [void]$moduleOrder.Add($u) }
     }
 
@@ -1554,7 +1554,7 @@ function Deploy-CustomPlaybooks {
         $displayName = $templateFile.Name
         try {
             if (-not (Test-ShouldDeployFile -FilePath $templateFile.FullName)) {
-                Write-PipelineMessage "Unchanged: $($templateFile.Name) â€” skipping (smart deployment)" -Level Info
+                Write-PipelineMessage "Unchanged: $($templateFile.Name) — skipping (smart deployment)" -Level Info
                 $counters.Skipped++
                 continue
             }
@@ -1577,7 +1577,7 @@ function Deploy-CustomPlaybooks {
             # Check dependency graph
             $depCheck = Test-ContentDependencies -ContentPath $templateFile.FullName
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Skipping '$displayName': missing dependencies â€” $($depCheck.Missing -join ', ')" -Level Warning
+                Write-PipelineMessage "Skipping '$displayName': missing dependencies — $($depCheck.Missing -join ', ')" -Level Warning
                 $counters.Skipped++
                 continue
             }
@@ -1630,7 +1630,7 @@ function Deploy-CustomPlaybooks {
                 Set-DeploymentItemState -FilePath $templateFile.FullName -Status "success"
 
                 # Note: Resource tagging (Source: Sentinel-As-Code) is handled declaratively
-                # in the ARM template itself â€” no post-deployment tagging needed.
+                # in the ARM template itself — no post-deployment tagging needed.
             }
         }
         catch {
@@ -1656,13 +1656,13 @@ function Deploy-CustomWorkbooks {
     Write-PipelineMessage "Deploying custom workbooks..." -Level Section
 
     if (-not (Test-Path $workbooksPath)) {
-        Write-PipelineMessage "Workbooks folder not found at '$workbooksPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "Workbooks folder not found at '$workbooksPath' — skipping." -Level Warning
         return $counters
     }
 
     $workbookDirs = @(Get-ChildItem -Path $workbooksPath -Directory)
     if ($workbookDirs.Count -eq 0) {
-        Write-PipelineMessage "No workbook subfolders found â€” skipping." -Level Info
+        Write-PipelineMessage "No workbook subfolders found — skipping." -Level Info
         return $counters
     }
 
@@ -1674,7 +1674,7 @@ function Deploy-CustomWorkbooks {
             $metadataPath = Join-Path $dir.FullName "metadata.json"
 
             if (-not (Test-ShouldDeployFile -FilePath $workbookPath)) {
-                Write-PipelineMessage "Unchanged: $($dir.Name) â€” skipping (smart deployment)" -Level Info
+                Write-PipelineMessage "Unchanged: $($dir.Name) — skipping (smart deployment)" -Level Info
                 $counters.Skipped++
                 continue
             }
@@ -1688,7 +1688,7 @@ function Deploy-CustomWorkbooks {
             # Check dependency graph
             $depCheck = Test-ContentDependencies -ContentPath $workbookPath
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Skipping '$($dir.Name)': missing dependencies â€” $($depCheck.Missing -join ', ')" -Level Warning
+                Write-PipelineMessage "Skipping '$($dir.Name)': missing dependencies — $($depCheck.Missing -join ', ')" -Level Warning
                 $counters.Skipped++
                 continue
             }
@@ -1777,7 +1777,7 @@ function Deploy-CustomHuntingQueries {
     Write-PipelineMessage "Deploying custom hunting queries..." -Level Section
 
     if (-not (Test-Path $huntingPath)) {
-        Write-PipelineMessage "HuntingQueries folder not found at '$huntingPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "HuntingQueries folder not found at '$huntingPath' — skipping." -Level Warning
         return $counters
     }
 
@@ -1790,7 +1790,7 @@ function Deploy-CustomHuntingQueries {
 
     $yamlFiles = @(Get-ChildItem -Path $huntingPath -Include "*.yaml", "*.yml" -Recurse -File)
     if ($yamlFiles.Count -eq 0) {
-        Write-PipelineMessage "No YAML files found in '$huntingPath' â€” skipping." -Level Info
+        Write-PipelineMessage "No YAML files found in '$huntingPath' — skipping." -Level Info
         return $counters
     }
 
@@ -1799,7 +1799,7 @@ function Deploy-CustomHuntingQueries {
 
     foreach ($file in $yamlFiles) {
         if (-not (Test-ShouldDeployFile -FilePath $file.FullName)) {
-            Write-PipelineMessage "Unchanged: $($file.Name) â€” skipping (smart deployment)" -Level Info
+            Write-PipelineMessage "Unchanged: $($file.Name) — skipping (smart deployment)" -Level Info
             $counters.Skipped++
             continue
         }
@@ -1819,10 +1819,10 @@ function Deploy-CustomHuntingQueries {
             $queryId = $hq['id']
             $queryName = $hq['name']
 
-            # Check dependency graph â€” skip if prerequisites are not met
+            # Check dependency graph — skip if prerequisites are not met
             $depCheck = Test-ContentDependencies -ContentPath $file.FullName
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Skipping '$($file.Name)': missing dependencies â€” $($depCheck.Missing -join ', ')" -Level Warning
+                Write-PipelineMessage "Skipping '$($file.Name)': missing dependencies — $($depCheck.Missing -join ', ')" -Level Warning
                 $counters.Skipped++
                 continue
             }
@@ -1906,13 +1906,13 @@ function Deploy-CustomAutomationRules {
     Write-PipelineMessage "Deploying custom automation rules..." -Level Section
 
     if (-not (Test-Path $automationPath)) {
-        Write-PipelineMessage "AutomationRules folder not found at '$automationPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "AutomationRules folder not found at '$automationPath' — skipping." -Level Warning
         return $counters
     }
 
     $jsonFiles = @(Get-ChildItem -Path $automationPath -Include "*.json" -Recurse -File | Where-Object { $_.Name -ne "README.md" })
     if ($jsonFiles.Count -eq 0) {
-        Write-PipelineMessage "No JSON files found in '$automationPath' â€” skipping." -Level Info
+        Write-PipelineMessage "No JSON files found in '$automationPath' — skipping." -Level Info
         return $counters
     }
 
@@ -1920,7 +1920,7 @@ function Deploy-CustomAutomationRules {
 
     foreach ($file in $jsonFiles) {
         if (-not (Test-ShouldDeployFile -FilePath $file.FullName)) {
-            Write-PipelineMessage "Unchanged: $($file.Name) â€” skipping (smart deployment)" -Level Info
+            Write-PipelineMessage "Unchanged: $($file.Name) — skipping (smart deployment)" -Level Info
             $counters.Skipped++
             continue
         }
@@ -1941,14 +1941,14 @@ function Deploy-CustomAutomationRules {
             # Check dependency graph
             $depCheck = Test-ContentDependencies -ContentPath $file.FullName
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Skipping '$($file.Name)': missing dependencies â€” $($depCheck.Missing -join ', ')" -Level Warning
+                Write-PipelineMessage "Skipping '$($file.Name)': missing dependencies — $($depCheck.Missing -join ', ')" -Level Warning
                 $counters.Skipped++
                 continue
             }
 
             Write-PipelineMessage "Processing: $ruleName (order: $($rule.order)) [$($file.Name)]" -Level Info
 
-            # Build the API body â€” the JSON file structure maps directly to the properties object
+            # Build the API body — the JSON file structure maps directly to the properties object
             $body = @{
                 properties = @{
                     displayName     = $ruleName
@@ -1994,13 +1994,13 @@ function Deploy-CustomSummaryRules {
     Write-PipelineMessage "Deploying custom summary rules..." -Level Section
 
     if (-not (Test-Path $summaryPath)) {
-        Write-PipelineMessage "SummaryRules folder not found at '$summaryPath' â€” skipping." -Level Warning
+        Write-PipelineMessage "SummaryRules folder not found at '$summaryPath' — skipping." -Level Warning
         return $counters
     }
 
     $jsonFiles = @(Get-ChildItem -Path $summaryPath -Include "*.json" -Recurse -File | Where-Object { $_.Name -ne "README.md" })
     if ($jsonFiles.Count -eq 0) {
-        Write-PipelineMessage "No JSON files found in '$summaryPath' â€” skipping." -Level Info
+        Write-PipelineMessage "No JSON files found in '$summaryPath' — skipping." -Level Info
         return $counters
     }
 
@@ -2010,7 +2010,7 @@ function Deploy-CustomSummaryRules {
 
     foreach ($file in $jsonFiles) {
         if (-not (Test-ShouldDeployFile -FilePath $file.FullName)) {
-            Write-PipelineMessage "Unchanged: $($file.Name) â€” skipping (smart deployment)" -Level Info
+            Write-PipelineMessage "Unchanged: $($file.Name) — skipping (smart deployment)" -Level Info
             $counters.Skipped++
             continue
         }
@@ -2045,7 +2045,7 @@ function Deploy-CustomSummaryRules {
             # Check dependency graph
             $depCheck = Test-ContentDependencies -ContentPath $file.FullName
             if (-not $depCheck.Passed) {
-                Write-PipelineMessage "Skipping '$($file.Name)': missing dependencies â€” $($depCheck.Missing -join ', ')" -Level Warning
+                Write-PipelineMessage "Skipping '$($file.Name)': missing dependencies — $($depCheck.Missing -join ', ')" -Level Warning
                 $counters.Skipped++
                 continue
             }
@@ -2165,7 +2165,7 @@ function Main {
     Write-PipelineMessage ("=" * 60) -Level Info
 
     if ($WhatIf) {
-        Write-PipelineMessage "DRY RUN MODE â€” no changes will be made." -Level Warning
+        Write-PipelineMessage "DRY RUN MODE — no changes will be made." -Level Warning
     }
 
     # â”€â”€ Step 1/12: Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

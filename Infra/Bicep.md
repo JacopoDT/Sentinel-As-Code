@@ -7,10 +7,17 @@ resource group for playbooks.
 
 | File | Scope | Purpose |
 | --- | --- | --- |
-| [`Bicep/main.bicep`](../Infra/main.bicep) | Subscription | Orchestrator â€” creates resource groups and invokes the Sentinel module |
+<<<<<<< HEAD
+| [`Bicep/main.bicep`](../Infra/main.bicep) | Subscription | Orchestrator — creates resource groups and invokes the Sentinel module |
 | [`Bicep/sentinel.bicep`](../Infra/sentinel.bicep) | Resource group | Workspace, Sentinel onboarding, diagnostic settings |
 
-These are invoked by Stage 2 of [`Pipelines/Sentinel-Deploy.yml`](../Pipelines/Sentinel-Deploy.yml) â€” see [Pipelines](Pipelines.md). Sentinel feature settings that are not exposed by Bicep (Entity Analytics, UEBA, Anomalies, EyesOn) are configured via REST in a follow-on pipeline step in the same stage.
+These are invoked by Stage 2 of [`Pipelines/Sentinel-Deploy.yml`](../Pipelines/Sentinel-Deploy.yml) — see [Pipelines](Pipelines.md). Sentinel feature settings that are not exposed by Bicep (Entity Analytics, UEBA, Anomalies, EyesOn) are configured via REST in a follow-on pipeline step in the same stage.
+=======
+| [`Bicep/main.bicep`](../Infra/main.bicep) | Subscription | Orchestrator — creates resource groups and invokes the Sentinel module |
+| [`Bicep/sentinel.bicep`](../Infra/sentinel.bicep) | Resource group | Workspace, Sentinel onboarding, diagnostic settings |
+
+These are invoked by Stage 2 of [`Pipelines/Sentinel-Deploy.yml`](../Pipelines/Sentinel-Deploy.yml) — see [Pipelines](Pipelines.md). Sentinel feature settings that are not exposed by Bicep (Entity Analytics, UEBA, Anomalies, EyesOn) are configured via REST in a follow-on pipeline step in the same stage.
+>>>>>>> 7fddae6 (New directory structure)
 
 ## main.bicep
 
@@ -20,28 +27,28 @@ Subscription-scoped orchestrator. Creates the main resource group, an optional s
 
 | Parameter | Type | Default | Constraints | Description |
 | --- | --- | --- | --- | --- |
-| `rgName` | string | â€” | 1-90 chars | Name of the main Sentinel resource group to create |
-| `rgLocation` | string | â€” | â€” | Azure region for all resources (e.g. `uksouth`) |
-| `lawName` | string | â€” | 4-63 chars | Log Analytics workspace name (passed through to the module) |
+| `rgName` | string | — | 1-90 chars | Name of the main Sentinel resource group to create |
+| `rgLocation` | string | — | — | Azure region for all resources (e.g. `uksouth`) |
+| `lawName` | string | — | 4-63 chars | Log Analytics workspace name (passed through to the module) |
 | `dailyQuota` | int | `0` | 0-5120 | Daily ingestion cap in GB. `0` = unlimited |
 | `retentionInDays` | int | `90` | 30-730 | Interactive retention period |
 | `totalRetentionInDays` | int | `0` | 0-2555 | Total retention including archive tier. `0` = use platform default (matches `retentionInDays`) |
-| `playbookRgName` | string | `''` | â€” | Optional separate Resource Group for playbooks/Logic Apps. Empty or equal to `rgName` means playbooks land in the main RG |
-| `tags` | object | `{}` | â€” | Resource tags applied to all resources |
+| `playbookRgName` | string | `''` | — | Optional separate Resource Group for playbooks/Logic Apps. Empty or equal to `rgName` means playbooks land in the main RG |
+| `tags` | object | `{}` | — | Resource tags applied to all resources |
 
 ### Resources created
 
 | Resource | API version | Notes |
 | --- | --- | --- |
 | `Microsoft.Resources/resourceGroups` (main) | `2024-07-01` | Always created |
-| `Microsoft.Resources/resourceGroups` (playbook) | `2024-07-01` | Conditional â€” only when `playbookRgName` is non-empty AND differs from `rgName` |
+| `Microsoft.Resources/resourceGroups` (playbook) | `2024-07-01` | Conditional — only when `playbookRgName` is non-empty AND differs from `rgName` |
 
 ### Outputs
 
 | Output | Type | Source |
 | --- | --- | --- |
-| `sentinelResourceId` | string | Bubbled up from the Sentinel module â€” the OMS solution resource ID |
-| `logAnalyticsWorkspace` | object | Bubbled up from the Sentinel module â€” `{ name, id, location, retentionInDays }` |
+| `sentinelResourceId` | string | Bubbled up from the Sentinel module — the OMS solution resource ID |
+| `logAnalyticsWorkspace` | object | Bubbled up from the Sentinel module — `{ name, id, location, retentionInDays }` |
 
 ## sentinel.bicep
 
@@ -51,11 +58,11 @@ Resource-group-scoped module. Creates the workspace, both onboarding mechanisms,
 
 | Parameter | Type | Default | Constraints | Description |
 | --- | --- | --- | --- | --- |
-| `lawName` | string | â€” | 4-63 chars | Log Analytics workspace name |
+| `lawName` | string | — | 4-63 chars | Log Analytics workspace name |
 | `dailyQuota` | int | `0` | 0-5120 | Daily ingestion cap in GB. `0` = unlimited |
 | `retentionInDays` | int | `90` | 30-730 | Interactive retention period |
 | `totalRetentionInDays` | int | `0` | 0-2555 | Total retention including archive tier. `0` = use `retentionInDays` |
-| `tags` | object | `{}` | â€” | Resource tags applied to the workspace |
+| `tags` | object | `{}` | — | Resource tags applied to the workspace |
 
 ### Resources created
 
@@ -65,7 +72,7 @@ Resource-group-scoped module. Creates the workspace, both onboarding mechanisms,
 | `Microsoft.OperationsManagement/solutions` | `2015-11-01-preview` | Legacy Sentinel onboarding via `SecurityInsights({lawName})` solution. Idempotent on re-run |
 | `Microsoft.SecurityInsights/onboardingStates` | `2024-09-01` | Modern onboarding state required by newer SecurityInsights API versions for downstream operations to recognise the workspace as Sentinel-onboarded |
 | `Microsoft.Insights/diagnosticSettings` (workspace) | `2021-05-01-preview` | Workspace audit + AllMetrics shipped to itself |
-| `Microsoft.SecurityInsights/settings` (existing) | `2023-02-01-preview` | `SentinelHealth` settings reference (read-only â€” for diagnostic targeting) |
+| `Microsoft.SecurityInsights/settings` (existing) | `2023-02-01-preview` | `SentinelHealth` settings reference (read-only — for diagnostic targeting) |
 | `Microsoft.Insights/diagnosticSettings` (Sentinel Health) | `2021-05-01-preview` | Populates `SentinelHealth` and `SentinelAudit` tables |
 
 ### Outputs
@@ -104,7 +111,7 @@ Sends management-plane activity (queries, writes, configuration changes) and pla
 
 Populates the `SentinelHealth` and `SentinelAudit` tables in the workspace. These power the built-in Sentinel Health workbook and any custom hunting queries that monitor connector / playbook / analytics-rule health.
 
-The setting targets a `Microsoft.SecurityInsights/settings` resource named `SentinelHealth` declared as `existing` â€” the resource is auto-created by Sentinel onboarding, so the Bicep just references it without re-declaring.
+The setting targets a `Microsoft.SecurityInsights/settings` resource named `SentinelHealth` declared as `existing` — the resource is auto-created by Sentinel onboarding, so the Bicep just references it without re-declaring.
 
 ## Optional playbook resource group
 
@@ -138,7 +145,7 @@ az deployment sub create \
         playbookRgName=$(playbookResourceGroup)
 ```
 
-Stage 1 first checks whether the resource group + workspace already exist, and skips Stage 2 entirely when they do â€” see [Pipelines](Pipelines.md) for the conditional logic.
+Stage 1 first checks whether the resource group + workspace already exist, and skips Stage 2 entirely when they do — see [Pipelines](Pipelines.md) for the conditional logic.
 
 ## Settings configured outside Bicep
 
@@ -147,7 +154,7 @@ The following Sentinel settings are configured via REST API in the same Stage 2 
 | Setting | API | Reason it's not in Bicep |
 | --- | --- | --- |
 | `EntityAnalytics` | `Microsoft.SecurityInsights/settings/EntityAnalytics` | Requires ETag round-trip; cleaner in PowerShell |
-| `Ueba` | `Microsoft.SecurityInsights/settings/Ueba` | Same â€” ETag handling |
+| `Ueba` | `Microsoft.SecurityInsights/settings/Ueba` | Same — ETag handling |
 | `Anomalies` | `Microsoft.SecurityInsights/settings/Anomalies` | Same |
 | `EyesOn` | `Microsoft.SecurityInsights/settings/EyesOn` | Same |
 
@@ -155,15 +162,27 @@ The pipeline GETs the current setting (to capture the ETag) and PUTs the new sta
 
 ## Limitations
 
-- **Workspace SKU is hardcoded** to `PerGB2018`. Capacity Reservation tiers are not supported in this template â€” modify the SKU block in `sentinel.bicep` if needed.
+- **Workspace SKU is hardcoded** to `PerGB2018`. Capacity Reservation tiers are not supported in this template — modify the SKU block in `sentinel.bicep` if needed.
 - **Daily quota of 0 is a sentinel value**. Bicep maps `0` to the API's `-1` (unlimited). Setting an explicit `dailyQuota` of `1` is the smallest valid cap; values below 1 GB are rejected by the platform.
 - **Total retention defaulting**: when `totalRetentionInDays = 0`, Bicep substitutes `retentionInDays`. To enable archive-tier retention, pass an explicit `totalRetentionInDays` greater than `retentionInDays`.
-- **Sentinel feature settings** (Entity Analytics, UEBA, Anomalies, EyesOn) are configured outside Bicep â€” see the table above.
-- **No role assignments**. RBAC for the deploy service principal is granted via [`Scripts/Setup-ServicePrincipal.ps1`](../Deploy/Setup-ServicePrincipal.ps1) â€” see [Scripts](Scripts.md#setup-serviceprincipalps1).
+<<<<<<< HEAD
+- **Sentinel feature settings** (Entity Analytics, UEBA, Anomalies, EyesOn) are configured outside Bicep — see the table above.
+- **No role assignments**. RBAC for the deploy service principal is granted via [`Scripts/Setup-ServicePrincipal.ps1`](../Deploy/Setup-ServicePrincipal.ps1) — see [Scripts](Scripts.md#setup-serviceprincipalps1).
 
 ## Related docs
 
-- [Pipelines](Pipelines.md) â€” how Stage 2 runs Bicep and the post-Bicep settings step
-- [Scripts](Scripts.md#setup-serviceprincipalps1) â€” service principal RBAC bootstrap
-- [Playbooks](../Content/Playbooks/Playbooks.md) â€” how the optional playbook RG is consumed
-- [DCR Watchlist](../Content/Automation/DCR-Watchlist/DCR-Watchlist.md) â€” separate Bicep stack for the DCR-watchlist runbook (lives under `Automation/DCR-Watchlist/`, not this folder)
+- [Pipelines](Pipelines.md) — how Stage 2 runs Bicep and the post-Bicep settings step
+- [Scripts](Scripts.md#setup-serviceprincipalps1) — service principal RBAC bootstrap
+- [Playbooks](../Content/Playbooks/Playbooks.md) — how the optional playbook RG is consumed
+- [DCR Watchlist](../Content/Automation/DCR-Watchlist/DCR-Watchlist.md) — separate Bicep stack for the DCR-watchlist runbook (lives under `Automation/DCR-Watchlist/`, not this folder)
+=======
+- **Sentinel feature settings** (Entity Analytics, UEBA, Anomalies, EyesOn) are configured outside Bicep — see the table above.
+- **No role assignments**. RBAC for the deploy service principal is granted via [`Scripts/Setup-ServicePrincipal.ps1`](../Deploy/Setup-ServicePrincipal.ps1) — see [Scripts](Scripts.md#setup-serviceprincipalps1).
+
+## Related docs
+
+- [Pipelines](Pipelines.md) — how Stage 2 runs Bicep and the post-Bicep settings step
+- [Scripts](Scripts.md#setup-serviceprincipalps1) — service principal RBAC bootstrap
+- [Playbooks](../Content/Playbooks/Playbooks.md) — how the optional playbook RG is consumed
+- [DCR Watchlist](../Content/Automation/DCR-Watchlist/DCR-Watchlist.md) — separate Bicep stack for the DCR-watchlist runbook (lives under `Automation/DCR-Watchlist/`, not this folder)
+>>>>>>> 7fddae6 (New directory structure)
