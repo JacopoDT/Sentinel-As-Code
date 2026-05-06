@@ -231,7 +231,7 @@ jobs:
           inlineScript: |
             az deployment sub create \
               --location "${{ env.REGION }}" \
-              --template-file Bicep/main.bicep \
+              --template-file Infra/main.bicep \
               --parameters \
                 rgLocation="${{ env.REGION }}" \
                 rgName="${{ env.RESOURCE_GROUP }}" \
@@ -360,7 +360,7 @@ jobs:
             if ("${{ inputs.skip_hunting_queries }}" -eq "true")       { $scriptParams['SkipHuntingQueries']       = $true }
             if ("${{ inputs.what_if }}" -eq "true")                    { $scriptParams['WhatIf']                   = $true }
 
-            & "${{ github.workspace }}/Scripts/Deploy-SentinelContentHub.ps1" @scriptParams
+            & "${{ github.workspace }}/Deploy/Deploy-SentinelContentHub.ps1" @scriptParams
 
   # ===========================================================================
   # Stage 4: Deploy Custom Content
@@ -429,7 +429,7 @@ jobs:
             if ("${{ inputs.smart_deployment }}" -ne "false")            { $scriptParams['SmartDeployment']    = $true }
             if ("${{ inputs.what_if }}" -eq "true")                      { $scriptParams['WhatIf']             = $true }
 
-            & "${{ github.workspace }}/Scripts/Deploy-CustomContent.ps1" @scriptParams
+            & "${{ github.workspace }}/Deploy/Deploy-CustomContent.ps1" @scriptParams
 
       - name: Save Deployment State
         if: always()
@@ -479,4 +479,4 @@ jobs:
 
             if ("${{ inputs.what_if }}" -eq "true") { $scriptParams['WhatIf'] = $true }
 
-            & "${{ github.workspace }}/Scripts/Deploy-DefenderDetections.ps1" @scriptParams
+            & "${{ github.workspace }}/Deploy/Deploy-DefenderDetections.ps1" @scriptParams

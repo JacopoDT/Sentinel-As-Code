@@ -181,7 +181,7 @@ stages:
                 Write-Host "Workspace: $(sentinelWorkspaceName) (RG: $(sentinelResourceGroup))"
                 Write-Host "Switches:  $(($scriptParams.Keys | Where-Object { $scriptParams[$_] -eq $true }) -join ', ')"
 
-                & "$(Build.SourcesDirectory)/Scripts/Test-SentinelRuleDrift.ps1" @scriptParams
+                & "$(Build.SourcesDirectory)/Deploy/Test-SentinelRuleDrift.ps1" @scriptParams
 
           # Commit + push + PR. Bash so 'az' and 'git' behave predictably.
           # Skipped entirely when -ReportOnly was passed: nothing on disk to commit.
@@ -217,7 +217,7 @@ stages:
               git stash pop --quiet || true
 
               # Stage only paths the script may legitimately have touched.
-              git add AnalyticalRules reports
+              git add Content/AnalyticalRules reports
 
               # Commit message includes the timestamp; the report filename is
               # also timestamped so multiple runs accumulate without collision.

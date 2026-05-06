@@ -83,8 +83,8 @@ BeforeDiscovery {
         }
     }
 
-    $script:analyticalRuleCases = @(Get-YamlCases -Subdirectory 'AnalyticalRules')
-    $script:huntingQueryCases   = @(Get-YamlCases -Subdirectory 'HuntingQueries')
+    $script:analyticalRuleCases = @(Get-YamlCases -Subdirectory 'Content/AnalyticalRules')
+    $script:huntingQueryCases   = @(Get-YamlCases -Subdirectory 'Content/HuntingQueries')
 }
 
 BeforeAll {
@@ -246,7 +246,7 @@ Describe 'Analytical rules: cross-file invariants' {
             Import-Module powershell-yaml -ErrorAction Stop
         }
         $repoRoot = Split-Path -Parent $PSScriptRoot
-        $rulesPath = Join-Path $repoRoot 'AnalyticalRules'
+        $rulesPath = Join-Path $repoRoot 'Content/AnalyticalRules'
 
         # Community rules under AnalyticalRules/Community/ are imported from
         # third-party repos. David's upstream deliberately reuses ids across

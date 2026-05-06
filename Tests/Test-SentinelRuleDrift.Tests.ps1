@@ -39,7 +39,7 @@
 
 BeforeAll {
     $repoRoot   = Split-Path -Parent $PSScriptRoot
-    $scriptPath = Join-Path -Path $repoRoot -ChildPath 'Scripts/Test-SentinelRuleDrift.ps1'
+    $scriptPath = Join-Path -Path $repoRoot -ChildPath 'Deploy/Test-SentinelRuleDrift.ps1'
 
     # Extract every top-level function via the AST and dot-source just those.
     # Avoids running the param block, the #Requires directive, and Invoke-Main.
@@ -106,7 +106,7 @@ BeforeAll {
     }
 
     function Get-FixtureYamlPath {
-        Join-Path $repoRoot 'AnalyticalRules/AzureActivity/AzureVmRunCommandExecutionDetectionRule.yaml'
+        Join-Path $repoRoot 'Content/AnalyticalRules/AzureActivity/AzureVmRunCommandExecutionDetectionRule.yaml'
     }
 }
 
@@ -525,7 +525,7 @@ Describe 'Resolve-RuleSource' {
         It 'resolves to Custom when GUID matches a YAML id' {
             $guid = (New-Guid).Guid
             $yamlEntry = @{
-                FilePath    = '/repo/AnalyticalRules/Custom/foo.yaml'
+                FilePath    = '/repo/Content/AnalyticalRules/Custom/foo.yaml'
                 IsCommunity = $false
                 Yaml        = @{
                     id               = $guid
@@ -549,7 +549,7 @@ Describe 'Resolve-RuleSource' {
                 -SolutionByPackageId @{}
 
             $resolved.Source    | Should -Be 'Custom'
-            $resolved.SourceRef | Should -Be '/repo/AnalyticalRules/Custom/foo.yaml'
+            $resolved.SourceRef | Should -Be '/repo/Content/AnalyticalRules/Custom/foo.yaml'
             $resolved.Expected  | Should -Not -BeNullOrEmpty
             # The Custom branch normalises YAML triggerOperator to API form
             $resolved.Expected.triggerOperator | Should -Be 'GreaterThan'

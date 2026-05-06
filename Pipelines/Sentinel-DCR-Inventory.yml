@@ -27,7 +27,7 @@ trigger:
       - main
   paths:
     include:
-      - Automation/DCR-Watchlist/**
+      - Content/Automation/DCR-Watchlist/**
 
 parameters:
   # ── Deployment Options ───────────────────────────────────────────────────
@@ -88,7 +88,7 @@ variables:
   - name: SuppressAzurePowerShellBreakingChangeWarnings
     value: "true"
   - name: bicepPath
-    value: "$(Build.SourcesDirectory)/Automation/DCR-Watchlist"
+    value: "$(Build.SourcesDirectory)/Content/Automation/DCR-Watchlist"
 
 pool:
   vmImage: "ubuntu-latest"

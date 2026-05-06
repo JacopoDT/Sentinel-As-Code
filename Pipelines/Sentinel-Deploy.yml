@@ -437,7 +437,7 @@ stages:
 
                 az deployment sub create \
                   --location "$(sentinelRegion)" \
-                  --template-file Bicep/main.bicep \
+                  --template-file Infra/main.bicep \
                   --parameters $PARAMS
 
           - task: PowerShell@2
@@ -580,7 +580,7 @@ stages:
                 Write-Host "Solutions: $($solutionList -join ', ')"
                 Write-Host "Switches: $(($scriptParams.Keys | Where-Object { $scriptParams[$_] -eq $true }) -join ', ')"
 
-                & "$(Build.SourcesDirectory)/Scripts/Deploy-SentinelContentHub.ps1" @scriptParams
+                & "$(Build.SourcesDirectory)/Deploy/Deploy-SentinelContentHub.ps1" @scriptParams
               azurePowerShellVersion: "LatestVersion"
               pwsh: true
               errorActionPreference: "Continue"
@@ -675,7 +675,7 @@ stages:
                 Write-Host "##[section]Launching Custom Content Deployment"
                 Write-Host "Switches: $(($scriptParams.Keys | Where-Object { $scriptParams[$_] -eq $true }) -join ', ')"
 
-                & "$(Build.SourcesDirectory)/Scripts/Deploy-CustomContent.ps1" @scriptParams
+                & "$(Build.SourcesDirectory)/Deploy/Deploy-CustomContent.ps1" @scriptParams
               azurePowerShellVersion: "LatestVersion"
               pwsh: true
               errorActionPreference: "Continue"
@@ -742,7 +742,7 @@ stages:
 
                 Write-Host "##[section]Launching Defender XDR Custom Detections Deployment"
 
-                & "$(Build.SourcesDirectory)/Scripts/Deploy-DefenderDetections.ps1" @scriptParams
+                & "$(Build.SourcesDirectory)/Deploy/Deploy-DefenderDetections.ps1" @scriptParams
               azurePowerShellVersion: "LatestVersion"
               pwsh: true
               errorActionPreference: "Continue"
